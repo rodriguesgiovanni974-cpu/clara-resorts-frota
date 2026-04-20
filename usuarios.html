@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Usuários — Clara Resorts Frota</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="js/layout.css">
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">CR</div>
+      <div class="sidebar-logo-text"><h2>Clara Resorts</h2><p>Gestão de Frota</p></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Principal</div>
+      <a class="nav-link" data-page="dashboard" href="dashboard.html"><span class="nav-icon">📊</span>Dashboard</a>
+      <a class="nav-link" data-page="os" href="os.html"><span class="nav-icon">🔧</span>Ordens de Serviço</a>
+      <a class="nav-link" data-page="relatorios" href="relatorios.html"><span class="nav-icon">📋</span>Relatórios</a>
+      <div class="nav-section-label">Administração</div>
+      <a class="nav-link active" data-page="usuarios" href="usuarios.html"><span class="nav-icon">👥</span>Usuários</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div class="user-info">
+          <div class="user-info-name" id="user-name">Carregando...</div>
+          <div class="user-info-role" id="user-unidade"></div>
+        </div>
+        <button class="btn-logout" onclick="logout()" title="Sair">⎋</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title">Gerenciamento de Usuários</span>
+      <button class="btn btn-primary btn-sm" onclick="openModal()">+ Convidar Usuário</button>
+    </div>
+
+    <div class="page-content">
+
+      <!-- INFO -->
+      <div style="background:var(--gold-pale);border:1px solid var(--gold);border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:var(--green-dark)">
+        <strong>Perfis de acesso:</strong>
+        <strong>Admin</strong> — vê e edita todas as unidades &nbsp;|&nbsp;
+        <strong>Gestor</strong> — vê e edita apenas sua unidade &nbsp;|&nbsp;
+        <strong>Viewer</strong> — apenas visualização
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-card">
+        <div class="table-card-header">
+          <span class="table-card-title">👥 Usuários Cadastrados</span>
+          <span id="count-users" style="font-size:12px;color:var(--text-muted)"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Perfil</th>
+                <th>Unidade</th>
+                <th>Cadastro</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody">
+              <tr><td colspan="6" class="loading">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL USUÁRIO -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Convidar Usuário</span>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <input type="hidden" id="u-id">
+        <div class="form-group full">
+          <label>Nome *</label>
+          <input type="text" id="u-nome" placeholder="Nome completo" required>
+        </div>
+        <div class="form-group full" id="email-group">
+          <label>E-mail *</label>
+          <input type="email" id="u-email" placeholder="usuario@clararesorts.com.br" required>
+        </div>
+        <div class="form-group full" id="senha-group">
+          <label>Senha inicial *</label>
+          <input type="password" id="u-senha" placeholder="Mínimo 6 caracteres" minlength="6">
+          <span style="font-size:11px;color:var(--text-muted)">O usuário deve trocar a senha no primeiro acesso.</span>
+        </div>
+        <div class="form-group">
+          <label>Perfil *</label>
+          <select id="u-role">
+            <option value="viewer">Viewer</option>
+            <option value="gestor">Gestor</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Unidade</label>
+          <select id="u-unidade">
+            <option value="">— Todas (Admin) —</option>
+            <option value="Ibiúna">Ibiúna</option>
+            <option value="Dourado">Dourado</option>
+            <option value="Arte">Arte</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-salvar" onclick="salvarUsuario()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let profile = null;
+let users = [];
+
+function roleBadge(role) {
+  const map = { admin: ['badge-blue','Admin'], gestor: ['badge-green','Gestor'], viewer: ['badge-gray','Viewer'] };
+  const [cls, label] = map[role] || ['badge-gray', role];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+async function loadUsers() {
+  const { data } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
+  users = data || [];
+  document.getElementById('count-users').textContent = `${users.length} usuários`;
+  renderUsers();
+}
+
+function renderUsers() {
+  if (!users.length) {
+    document.getElementById('users-tbody').innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-state-icon">👥</div><h3>Nenhum usuário cadastrado</h3></div></td></tr>';
+    return;
+  }
+  document.getElementById('users-tbody').innerHTML = users.map(u => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--green-dark);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">
+            ${(u.nome||'?').charAt(0).toUpperCase()}
+          </div>
+          <strong>${u.nome||'—'}</strong>
+        </div>
+      </td>
+      <td style="font-size:12px;color:var(--text-muted)">${u.email||'—'}</td>
+      <td>${roleBadge(u.role)}</td>
+      <td>${u.unidade ? badgeUnidade(u.unidade) : '<span style="color:var(--text-muted);font-size:12px">Todas</span>'}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${u.created_at ? new Date(u.created_at).toLocaleDateString('pt-BR') : '—'}</td>
+      <td>
+        <button class="btn-icon" onclick="editarUsuario('${u.id}')" title="Editar">✏️</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openModal(u = null) {
+  document.getElementById('modal-title').textContent = u ? 'Editar Usuário' : 'Convidar Usuário';
+  document.getElementById('u-id').value = '';
+  document.getElementById('u-nome').value = '';
+  document.getElementById('u-email').value = '';
+  document.getElementById('u-senha').value = '';
+  document.getElementById('u-role').value = 'viewer';
+  document.getElementById('u-unidade').value = '';
+
+  const emailG = document.getElementById('email-group');
+  const senhaG = document.getElementById('senha-group');
+
+  if (u) {
+    document.getElementById('u-id').value      = u.id;
+    document.getElementById('u-nome').value    = u.nome||'';
+    document.getElementById('u-email').value   = u.email||'';
+    document.getElementById('u-role').value    = u.role||'viewer';
+    document.getElementById('u-unidade').value = u.unidade||'';
+    emailG.style.display = 'none';
+    senhaG.style.display = 'none';
+  } else {
+    emailG.style.display = '';
+    senhaG.style.display = '';
+  }
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+function editarUsuario(id) {
+  const u = users.find(x => x.id === id);
+  if (u) openModal(u);
+}
+
+async function salvarUsuario() {
+  const btn = document.getElementById('btn-salvar');
+  btn.disabled = true; btn.textContent = 'Salvando...';
+
+  const id    = document.getElementById('u-id').value;
+  const nome  = document.getElementById('u-nome').value.trim();
+  const email = document.getElementById('u-email').value.trim();
+  const senha = document.getElementById('u-senha').value;
+  const role  = document.getElementById('u-role').value;
+  const unidade = document.getElementById('u-unidade').value || null;
+
+  if (!nome) { toast('Informe o nome do usuário.', 'error'); btn.disabled=false; btn.textContent='Salvar'; return; }
+
+  if (id) {
+    // Editar perfil existente
+    const { error } = await sb.from('profiles').update({ nome, role, unidade }).eq('id', id);
+    btn.disabled = false; btn.textContent = 'Salvar';
+    if (error) { toast('Erro: ' + error.message, 'error'); return; }
+    toast('Usuário atualizado!', 'success');
+  } else {
+    // Criar novo usuário via Admin API (precisa de service_role key no backend)
+    // Como estamos em modo frontend, usamos signUp
+    if (!email || !senha) { toast('E-mail e senha são obrigatórios.', 'error'); btn.disabled=false; btn.textContent='Salvar'; return; }
+    const { data, error } = await sb.auth.signUp({ email, password: senha, options: { data: { nome } } });
+    if (error) { toast('Erro ao criar usuário: ' + error.message, 'error'); btn.disabled=false; btn.textContent='Salvar'; return; }
+    // Atualiza perfil com role e unidade
+    if (data.user) {
+      await sb.from('profiles').update({ nome, role, unidade }).eq('id', data.user.id);
+    }
+    toast('Usuário convidado! Ele receberá um e-mail de confirmação.', 'success');
+    btn.disabled = false; btn.textContent = 'Salvar';
+  }
+
+  closeModal();
+  loadUsers();
+}
+
+document.getElementById('modal-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+(async () => {
+  const session = await requireAuth();
+  if (!session) return;
+  profile = await getProfile(session.user.id);
+  if (profile?.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
+  renderUserHeader(profile);
+  const av = document.getElementById('user-avatar');
+  if (av && profile?.nome) av.textContent = profile.nome.charAt(0).toUpperCase();
+  setActiveNav('usuarios');
+  loadUsers();
+})();
+</script>
+</body>
+</html>

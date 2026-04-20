@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ordens de Serviço — Clara Resorts Frota</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="js/layout.css">
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">CR</div>
+      <div class="sidebar-logo-text"><h2>Clara Resorts</h2><p>Gestão de Frota</p></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Principal</div>
+      <a class="nav-link" data-page="dashboard" href="dashboard.html"><span class="nav-icon">📊</span>Dashboard</a>
+      <a class="nav-link active" data-page="os" href="os.html"><span class="nav-icon">🔧</span>Ordens de Serviço</a>
+      <a class="nav-link" data-page="relatorios" href="relatorios.html"><span class="nav-icon">📋</span>Relatórios</a>
+      <div class="nav-section-label" id="admin-section" style="display:none">Administração</div>
+      <a class="nav-link" data-page="usuarios" href="usuarios.html" id="nav-usuarios" style="display:none"><span class="nav-icon">👥</span>Usuários</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div class="user-info">
+          <div class="user-info-name" id="user-name">Carregando...</div>
+          <div class="user-info-role" id="user-unidade"></div>
+        </div>
+        <button class="btn-logout" onclick="logout()" title="Sair">⎋</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title">Ordens de Serviço</span>
+      <button class="btn btn-primary btn-sm" onclick="openModal()">+ Nova OS</button>
+    </div>
+
+    <div class="page-content">
+
+      <!-- FILTERS -->
+      <div class="filters-bar">
+        <input class="search-input" type="text" id="search" placeholder="🔍 Buscar veículo, placa, prestador..." oninput="renderTable()">
+        <select id="f-unidade" onchange="loadOS()">
+          <option value="">Todas as Unidades</option>
+          <option value="Ibiúna">Ibiúna</option>
+          <option value="Dourado">Dourado</option>
+          <option value="Arte">Arte</option>
+        </select>
+        <select id="f-tipo" onchange="loadOS()">
+          <option value="">Todos os Tipos</option>
+          <option value="Mecânica">Mecânica</option>
+          <option value="Elétrica">Elétrica</option>
+          <option value="Funilaria">Funilaria</option>
+          <option value="Pneu">Pneu</option>
+          <option value="Limpeza">Limpeza</option>
+          <option value="Borracharia">Borracharia</option>
+          <option value="Outros">Outros</option>
+        </select>
+        <select id="f-status" onchange="renderTable()">
+          <option value="">Todos os Status</option>
+          <option value="finalizado">Finalizado</option>
+          <option value="em andamento">Em Andamento</option>
+          <option value="agd veículo">Agd. Veículo</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="clearFilters()">Limpar</button>
+        <button class="btn btn-gold btn-sm" onclick="exportarCSV()">↓ Exportar CSV</button>
+        <span style="margin-left:auto;font-size:12px;color:var(--text-muted)" id="count-label"></span>
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th onclick="sortBy('veiculo')">Veículo ↕</th>
+                <th>Placa</th>
+                <th onclick="sortBy('unidade')">Unidade ↕</th>
+                <th onclick="sortBy('data_solicitacao')">Solicitação ↕</th>
+                <th onclick="sortBy('tipo')">Tipo ↕</th>
+                <th>Descrição</th>
+                <th onclick="sortBy('custo')">Custo ↕</th>
+                <th onclick="sortBy('status_servico')">Status ↕</th>
+                <th>Aprovação</th>
+                <th>Prestador</th>
+                <th onclick="sortBy('data_retorno')">Retorno ↕</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="os-tbody">
+              <tr><td colspan="12" class="loading">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-footer">
+          <span id="table-info">—</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary btn-sm" id="btn-prev" onclick="prevPage()">← Anterior</button>
+            <span id="page-info" style="font-size:12px;color:var(--text-muted);align-self:center"></span>
+            <button class="btn btn-secondary btn-sm" id="btn-next" onclick="nextPage()">Próxima →</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL OS -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Nova Ordem de Serviço</span>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="os-form">
+        <input type="hidden" id="os-id">
+        <div class="form-grid">
+          <div class="form-section">Veículo</div>
+          <div class="form-group">
+            <label>Veículo *</label>
+            <input type="text" id="f-veiculo" required placeholder="Ex: Kombi, Fiorino...">
+          </div>
+          <div class="form-group">
+            <label>Placa</label>
+            <input type="text" id="f-placa" placeholder="ABC1234">
+          </div>
+          <div class="form-group">
+            <label>Marca</label>
+            <input type="text" id="f-marca" placeholder="Ex: Volkswagen, FIAT...">
+          </div>
+          <div class="form-group">
+            <label>Unidade *</label>
+            <select id="f-unidade-os" required>
+              <option value="">Selecione</option>
+              <option value="Ibiúna">Ibiúna</option>
+              <option value="Dourado">Dourado</option>
+              <option value="Arte">Arte</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>KM</label>
+            <input type="text" id="f-km" placeholder="Ex: 45.000">
+          </div>
+
+          <div class="form-section">Serviço</div>
+          <div class="form-group">
+            <label>Data da Solicitação *</label>
+            <input type="date" id="f-data-solic" required>
+          </div>
+          <div class="form-group">
+            <label>Tipo *</label>
+            <select id="f-tipo-os" required>
+              <option value="">Selecione</option>
+              <option value="Mecânica">Mecânica</option>
+              <option value="Elétrica">Elétrica</option>
+              <option value="Funilaria">Funilaria</option>
+              <option value="Pneu">Pneu</option>
+              <option value="Limpeza">Limpeza</option>
+              <option value="Borracharia">Borracharia</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Descrição do Serviço</label>
+            <textarea id="f-descricao" placeholder="Descreva o serviço solicitado..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Status do Veículo</label>
+            <select id="f-status-veiculo">
+              <option value="em operação">Em Operação</option>
+              <option value="em oficina">Em Oficina</option>
+              <option value="parado">Parado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Data da Ocorrência</label>
+            <input type="date" id="f-data-ocorrencia">
+          </div>
+
+          <div class="form-section">Aprovação e Custo</div>
+          <div class="form-group">
+            <label>Status de Aprovação</label>
+            <select id="f-status-aprov">
+              <option value="agd aprovação">Agd. Aprovação</option>
+              <option value="aprovado">Aprovado</option>
+              <option value="enviado s/ aprov.">Enviado s/ Aprovação</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Data de Aprovação</label>
+            <input type="date" id="f-data-aprov">
+          </div>
+          <div class="form-group">
+            <label>Status do Orçamento</label>
+            <select id="f-status-orcamento">
+              <option value="orçamento pendente">Orçamento Pendente</option>
+              <option value="orçamento enviado">Orçamento Enviado</option>
+              <option value="orçamento aprovado">Orçamento Aprovado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Custo (R$)</label>
+            <input type="number" id="f-custo" step="0.01" min="0" placeholder="0,00">
+          </div>
+
+          <div class="form-section">Execução</div>
+          <div class="form-group">
+            <label>Status do Serviço</label>
+            <select id="f-status-servico">
+              <option value="agd veículo">Agd. Veículo</option>
+              <option value="em andamento">Em Andamento</option>
+              <option value="finalizado">Finalizado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Data de Retorno</label>
+            <input type="date" id="f-data-retorno">
+          </div>
+          <div class="form-group">
+            <label>Prestador de Serviço</label>
+            <input type="text" id="f-prestador" placeholder="Nome da oficina/prestador">
+          </div>
+          <div class="form-group">
+            <label>Nota Fiscal</label>
+            <input type="text" id="f-nota-fiscal" placeholder="Número ou status">
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-salvar" onclick="salvarOS()">Salvar OS</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMA EXCLUSÃO -->
+<div class="modal-overlay" id="modal-del">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <span class="modal-title">Confirmar Exclusão</span>
+      <button class="modal-close" onclick="document.getElementById('modal-del').classList.remove('open')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:var(--text-muted)">Tem certeza que deseja excluir esta OS? Esta ação não pode ser desfeita.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="document.getElementById('modal-del').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-danger" id="btn-confirmar-del" onclick="confirmarExclusao()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let profile = null;
+let allData = [];
+let filtered = [];
+let sortKey = 'created_at';
+let sortDir = -1;
+let currentPage = 1;
+const PAGE_SIZE = 20;
+let deleteId = null;
+
+async function loadOS() {
+  document.getElementById('os-tbody').innerHTML = '<tr><td colspan="12" class="loading">Carregando...</td></tr>';
+  let query = sb.from('manutencao').select('*');
+  if (profile?.role !== 'admin' && profile?.unidade) query = query.eq('unidade', profile.unidade);
+  const fU = document.getElementById('f-unidade').value;
+  const fT = document.getElementById('f-tipo').value;
+  if (fU) query = query.eq('unidade', fU);
+  if (fT) query = query.ilike('tipo', fT);
+  const { data } = await query.order('data_solicitacao', { ascending: false });
+  allData = data || [];
+  currentPage = 1;
+  renderTable();
+}
+
+function renderTable() {
+  const q   = (document.getElementById('search').value || '').toLowerCase();
+  const fS  = document.getElementById('f-status').value;
+
+  filtered = allData.filter(r => {
+    if (fS && r.status_servico !== fS) return false;
+    if (q && ![r.veiculo,r.placa,r.prestador,r.descricao,r.unidade].some(v => v?.toLowerCase().includes(q))) return false;
+    return true;
+  });
+
+  if (sortKey) {
+    filtered = [...filtered].sort((a,b) => {
+      const av = a[sortKey] ?? '', bv = b[sortKey] ?? '';
+      if (typeof av === 'number') return (av - bv) * sortDir;
+      return String(av).localeCompare(String(bv)) * sortDir;
+    });
+  }
+
+  const total = filtered.length;
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (currentPage > pages) currentPage = pages;
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const page  = filtered.slice(start, start + PAGE_SIZE);
+
+  document.getElementById('count-label').textContent = `${total} registros`;
+  document.getElementById('table-info').textContent  = `Mostrando ${start+1}–${Math.min(start+PAGE_SIZE,total)} de ${total}`;
+  document.getElementById('page-info').textContent   = `Página ${currentPage} de ${pages}`;
+  document.getElementById('btn-prev').disabled = currentPage <= 1;
+  document.getElementById('btn-next').disabled = currentPage >= pages;
+
+  const isAdmin = profile?.role === 'admin';
+
+  if (!page.length) {
+    document.getElementById('os-tbody').innerHTML = '<tr><td colspan="12"><div class="empty-state"><div class="empty-state-icon">🔧</div><h3>Nenhuma OS encontrada</h3><p>Ajuste os filtros ou crie uma nova OS.</p></div></td></tr>';
+    return;
+  }
+
+  document.getElementById('os-tbody').innerHTML = page.map(r => `
+    <tr>
+      <td><strong>${r.veiculo}</strong></td>
+      <td style="font-size:12px;color:var(--text-muted)">${r.placa||'—'}</td>
+      <td>${badgeUnidade(r.unidade)}</td>
+      <td>${fmtData(r.data_solicitacao)}</td>
+      <td>${r.tipo ? r.tipo.charAt(0).toUpperCase()+r.tipo.slice(1) : '—'}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.descricao||''}">${r.descricao||'—'}</td>
+      <td style="font-weight:700;color:var(--green)">${r.custo > 0 ? fmtMoeda(r.custo) : '—'}</td>
+      <td>${badgeServico(r.status_servico)}</td>
+      <td>${badgeAprovacao(r.status_aprovacao)}</td>
+      <td style="font-size:12px">${r.prestador||'—'}</td>
+      <td style="font-size:12px">${fmtData(r.data_retorno)}</td>
+      <td>
+        <div style="display:flex;gap:4px">
+          <button class="btn-icon" onclick="editarOS('${r.id}')" title="Editar">✏️</button>
+          ${isAdmin ? `<button class="btn-icon" onclick="excluirOS('${r.id}')" title="Excluir">🗑️</button>` : ''}
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function sortBy(key) {
+  if (sortKey === key) sortDir *= -1;
+  else { sortKey = key; sortDir = 1; }
+  renderTable();
+}
+function prevPage() { if (currentPage > 1) { currentPage--; renderTable(); } }
+function nextPage() { const pages = Math.ceil(filtered.length/PAGE_SIZE); if (currentPage < pages) { currentPage++; renderTable(); } }
+function clearFilters() {
+  document.getElementById('search').value = '';
+  document.getElementById('f-unidade').value = '';
+  document.getElementById('f-tipo').value = '';
+  document.getElementById('f-status').value = '';
+  loadOS();
+}
+
+function openModal(os = null) {
+  document.getElementById('modal-title').textContent = os ? 'Editar OS' : 'Nova Ordem de Serviço';
+  document.getElementById('os-form').reset();
+  document.getElementById('os-id').value = '';
+
+  if (os) {
+    document.getElementById('os-id').value          = os.id;
+    document.getElementById('f-veiculo').value       = os.veiculo||'';
+    document.getElementById('f-placa').value         = os.placa||'';
+    document.getElementById('f-marca').value         = os.marca||'';
+    document.getElementById('f-unidade-os').value    = os.unidade||'';
+    document.getElementById('f-km').value            = os.km||'';
+    document.getElementById('f-data-solic').value    = os.data_solicitacao||'';
+    document.getElementById('f-tipo-os').value       = os.tipo||'';
+    document.getElementById('f-descricao').value     = os.descricao||'';
+    document.getElementById('f-status-veiculo').value= os.status_veiculo||'em operação';
+    document.getElementById('f-data-ocorrencia').value= os.data_ocorrencia||'';
+    document.getElementById('f-status-aprov').value  = os.status_aprovacao||'agd aprovação';
+    document.getElementById('f-data-aprov').value    = os.data_aprovacao||'';
+    document.getElementById('f-status-orcamento').value= os.status_orcamento||'orçamento pendente';
+    document.getElementById('f-custo').value         = os.custo||'';
+    document.getElementById('f-status-servico').value= os.status_servico||'agd veículo';
+    document.getElementById('f-data-retorno').value  = os.data_retorno||'';
+    document.getElementById('f-prestador').value     = os.prestador||'';
+    document.getElementById('f-nota-fiscal').value   = os.nota_fiscal||'';
+  } else {
+    document.getElementById('f-data-solic').value = new Date().toISOString().split('T')[0];
+    if (profile?.role !== 'admin' && profile?.unidade) {
+      document.getElementById('f-unidade-os').value = profile.unidade;
+    }
+  }
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+function editarOS(id) {
+  const os = allData.find(r => r.id === id);
+  if (os) openModal(os);
+}
+
+function excluirOS(id) {
+  deleteId = id;
+  document.getElementById('modal-del').classList.add('open');
+}
+
+async function confirmarExclusao() {
+  if (!deleteId) return;
+  const { error } = await sb.from('manutencao').delete().eq('id', deleteId);
+  document.getElementById('modal-del').classList.remove('open');
+  if (error) { toast('Erro ao excluir OS.', 'error'); return; }
+  toast('OS excluída com sucesso.', 'success');
+  deleteId = null;
+  loadOS();
+}
+
+async function salvarOS() {
+  const btn = document.getElementById('btn-salvar');
+  btn.disabled = true; btn.textContent = 'Salvando...';
+
+  const id = document.getElementById('os-id').value;
+  const payload = {
+    veiculo:           document.getElementById('f-veiculo').value.trim(),
+    placa:             document.getElementById('f-placa').value.trim(),
+    marca:             document.getElementById('f-marca').value.trim(),
+    unidade:           document.getElementById('f-unidade-os').value,
+    km:                document.getElementById('f-km').value.trim(),
+    data_solicitacao:  document.getElementById('f-data-solic').value,
+    tipo:              document.getElementById('f-tipo-os').value,
+    descricao:         document.getElementById('f-descricao').value.trim(),
+    status_veiculo:    document.getElementById('f-status-veiculo').value,
+    data_ocorrencia:   document.getElementById('f-data-ocorrencia').value || null,
+    status_aprovacao:  document.getElementById('f-status-aprov').value,
+    data_aprovacao:    document.getElementById('f-data-aprov').value || null,
+    status_orcamento:  document.getElementById('f-status-orcamento').value,
+    custo:             parseFloat(document.getElementById('f-custo').value) || 0,
+    status_servico:    document.getElementById('f-status-servico').value,
+    data_retorno:      document.getElementById('f-data-retorno').value || null,
+    prestador:         document.getElementById('f-prestador').value.trim(),
+    nota_fiscal:       document.getElementById('f-nota-fiscal').value.trim(),
+  };
+
+  if (!payload.veiculo || !payload.unidade || !payload.data_solicitacao || !payload.tipo) {
+    toast('Preencha os campos obrigatórios.', 'error');
+    btn.disabled = false; btn.textContent = 'Salvar OS';
+    return;
+  }
+
+  let error;
+  if (id) {
+    ({ error } = await sb.from('manutencao').update(payload).eq('id', id));
+  } else {
+    const { data: { user } } = await sb.auth.getUser();
+    payload.created_by = user.id;
+    ({ error } = await sb.from('manutencao').insert(payload));
+  }
+
+  btn.disabled = false; btn.textContent = 'Salvar OS';
+  if (error) { toast('Erro ao salvar: ' + error.message, 'error'); return; }
+  toast(id ? 'OS atualizada!' : 'OS criada com sucesso!', 'success');
+  closeModal();
+  loadOS();
+}
+
+function exportarCSV() {
+  const cols = ['veiculo','placa','unidade','data_solicitacao','tipo','descricao','custo','status_servico','status_aprovacao','prestador','data_retorno','nota_fiscal'];
+  exportCSV(filtered.map(r => Object.fromEntries(cols.map(c=>[c,r[c]]))), 'clara-resorts-frota.csv');
+}
+
+// Fechar modal ao clicar fora
+document.getElementById('modal-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+(async () => {
+  const session = await requireAuth();
+  if (!session) return;
+  profile = await getProfile(session.user.id);
+  renderUserHeader(profile);
+  const av = document.getElementById('user-avatar');
+  if (av && profile?.nome) av.textContent = profile.nome.charAt(0).toUpperCase();
+  if (profile?.role === 'admin') {
+    document.getElementById('admin-section').style.display = '';
+    document.getElementById('nav-usuarios').style.display = '';
+  } else {
+    document.getElementById('f-unidade').style.display = 'none';
+  }
+  setActiveNav('os');
+  loadOS();
+})();
+</script>
+</body>
+</html>
