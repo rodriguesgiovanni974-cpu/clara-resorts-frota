@@ -174,19 +174,7 @@
 let profile = null;
 let charts = {};
 const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-const PALETTE = ['#1E3A2B','#C9A84C','#DC2626','#4F86C6','#7B5EA7','#059669','#D97706','#E07B39','#0EA5E9','#DB2777'];
-
-// Cor fixa por tipo de manutenção
-const TIPO_CORES = {
-  'mecânica':   '#1E3A2B',
-  'elétrica':   '#4F86C6',
-  'funilaria':  '#D97706',
-  'pneu':       '#DC2626',
-  'limpeza':    '#059669',
-  'borracharia':'#7B5EA7',
-  'outros':     '#6B7280',
-  'partida':    '#0EA5E9',
-};
+const PALETTE = ['#1E3A2B','#2D5A3D','#4A8060','#C9A84C','#E8CC7A','#D97706','#DC2626','#4F86C6','#7B5EA7','#059669'];
 
 function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
 
@@ -251,7 +239,7 @@ function updateCharts(data) {
   destroyChart('chartTipo');
   charts['chartTipo'] = new Chart(document.getElementById('chartTipo'), {
     type: 'doughnut',
-    data: { labels: tipoS.map(([k])=>k.charAt(0).toUpperCase()+k.slice(1)), datasets: [{ data: tipoS.map(([,v])=>v), backgroundColor: tipoS.map(([k])=>TIPO_CORES[k.toLowerCase()]||'#6B7280'), borderWidth:2 }] },
+    data: { labels: tipoS.map(([k])=>k.charAt(0).toUpperCase()+k.slice(1)), datasets: [{ data: tipoS.map(([,v])=>v), backgroundColor: PALETTE, borderWidth:2 }] },
     options: { plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}, responsive:true }
   });
 
