@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clara Resorts — App Frota</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'Inter', system-ui, sans-serif; background: #E8E4DC; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 24px 0; }
+
+/* PHONE FRAME */
+.phone {
+  width: 390px;
+  min-height: 844px;
+  background: #F5F0E6;
+  border-radius: 48px;
+  box-shadow: 0 40px 80px rgba(0,0,0,.3), inset 0 0 0 1px rgba(0,0,0,.1);
+  overflow: hidden;
+  position: relative;
+  display: flex; flex-direction: column;
+}
+.phone-notch {
+  height: 44px; background: #1E3A2B;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px;
+  font-size: 12px; font-weight: 600; color: rgba(255,255,255,.8);
+  flex-shrink: 0;
+}
+.phone-notch-time { font-size: 15px; font-weight: 700; }
+.phone-notch-icons { display: flex; gap: 6px; align-items: center; font-size: 13px; }
+
+.screen {
+  flex: 1; overflow-y: auto; display: none; flex-direction: column;
+  background: #F5F0E6;
+}
+.screen.active { display: flex; }
+
+/* HEADER INTERNO */
+.app-header {
+  background: #1E3A2B; padding: 16px 20px 20px;
+  display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0;
+}
+.app-header-back {
+  width: 36px; height: 36px; background: rgba(255,255,255,.1);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 16px; border: none; color: #fff;
+  flex-shrink: 0;
+}
+.app-header-info { flex: 1; }
+.app-header-title { font-size: 17px; font-weight: 700; color: #fff; }
+.app-header-sub { font-size: 12px; color: rgba(255,255,255,.5); margin-top: 1px; }
+.app-header-logo { width: 36px; height: 36px; background: #C9A84C; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; color: #1E3A2B; }
+
+/* ===================== HOME ===================== */
+#screen-home .home-top {
+  background: #1E3A2B; padding: 24px 20px 32px;
+  position: relative; overflow: hidden;
+}
+#screen-home .home-top::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 80% 20%, rgba(201,168,76,.2) 0%, transparent 60%);
+}
+.home-greeting { font-size: 13px; color: rgba(255,255,255,.5); position: relative; }
+.home-name { font-size: 22px; font-weight: 800; color: #fff; margin-top: 2px; position: relative; }
+.home-logo-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: relative; }
+.home-logo-badge {
+  display: flex; align-items: center; gap: 8px;
+}
+.home-logo-icon { width: 38px; height: 38px; background: #C9A84C; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #1E3A2B; }
+.home-logo-text h3 { font-size: 15px; font-weight: 700; color: #fff; }
+.home-logo-text p { font-size: 10px; color: rgba(255,255,255,.4); }
+.home-date { font-size: 11px; color: rgba(255,255,255,.4); }
+
+.home-stats {
+  display: flex; gap: 10px; padding: 0 20px; margin-top: -16px;
+  position: relative; z-index: 2;
+}
+.home-stat {
+  flex: 1; background: #fff; border-radius: 14px; padding: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.08);
+  text-align: center;
+}
+.home-stat-val { font-size: 22px; font-weight: 800; color: #1E3A2B; }
+.home-stat-label { font-size: 10px; color: #6B7280; margin-top: 2px; }
+
+.home-grid { display: flex; flex-direction: column; gap: 10px; padding: 20px; }
+.home-btn {
+  background: #2D5A3D; border-radius: 12px; padding: 16px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; border: none; text-align: left; width: 100%;
+  transition: background .15s, transform .1s;
+}
+.home-btn:active { background: #1E3A2B; transform: scale(.98); }
+.home-btn-label { font-size: 15px; font-weight: 600; color: #fff; line-height: 1.3; }
+.home-btn-sub { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 2px; }
+.home-btn.green { background: #2D5A3D; }
+.home-btn.amber { background: #2D5A3D; }
+.home-btn.blue  { background: #2D5A3D; }
+.home-btn.red   { background: #2D5A3D; }
+.home-btn.purple{ background: #2D5A3D; }
+.home-btn.teal  { background: #2D5A3D; }
+.home-btn-arrow { font-size: 18px; color: #C9A84C; font-weight: 700; }
+
+/* ===================== VEÍCULOS ===================== */
+.veiculo-search {
+  padding: 16px 20px 8px;
+  background: #fff; border-bottom: 1px solid #F3F4F6;
+}
+.veiculo-search input {
+  width: 100%; background: #F9FAFB; border: 1px solid #E5E7EB;
+  border-radius: 12px; padding: 10px 14px;
+  font-size: 14px; font-family: inherit; color: #1A1A1A;
+  outline: none;
+}
+.veiculo-list { padding: 12px 20px; display: flex; flex-direction: column; gap: 10px; }
+.veiculo-card {
+  background: #fff; border-radius: 16px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 14px;
+  cursor: pointer; box-shadow: 0 1px 6px rgba(0,0,0,.06);
+  border: 1px solid #F3F4F6; transition: border-color .15s;
+}
+.veiculo-card:active { border-color: #C9A84C; }
+.veiculo-card-icon {
+  width: 72px; height: 56px; border-radius: 12px;
+  object-fit: cover; flex-shrink: 0; background: #EDF5EF;
+}
+.veiculo-card-info { flex: 1; }
+.veiculo-card-name { font-size: 15px; font-weight: 700; color: #1A1A1A; }
+.veiculo-card-placa {
+  font-size: 11px; color: #fff; background: #1E3A2B;
+  padding: 2px 8px; border-radius: 6px; display: inline-block; margin-top: 3px;
+  font-weight: 600; letter-spacing: .5px;
+}
+.veiculo-card-status {
+  font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+}
+.veiculo-card-status.disponivel { background: #DCFCE7; color: #166534; }
+.veiculo-card-status.em-uso { background: #FEE2E2; color: #991B1B; }
+
+/* ===================== FORM ===================== */
+.form-veiculo-banner {
+  background: #1E3A2B; padding: 16px 20px;
+  display: flex; align-items: center; gap: 12px;
+}
+.form-veiculo-icon {
+  width: 72px; height: 56px; border-radius: 10px;
+  object-fit: cover; flex-shrink: 0;
+}
+.form-veiculo-name { font-size: 16px; font-weight: 700; color: #fff; }
+.form-veiculo-placa { font-size: 12px; color: #C9A84C; font-weight: 600; }
+.form-veiculo-unidade { font-size: 11px; color: rgba(255,255,255,.4); }
+
+.form-body { padding: 16px 20px 32px; display: flex; flex-direction: column; gap: 14px; }
+
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: .5px; }
+.form-input, .form-select {
+  background: #fff; border: 1px solid #E5E7EB; border-radius: 12px;
+  padding: 12px 14px; font-size: 14px; font-family: inherit; color: #1A1A1A;
+  outline: none; width: 100%;
+  transition: border-color .2s;
+}
+.form-input:focus, .form-select:focus { border-color: #C9A84C; }
+.form-input[readonly] { background: #F9FAFB; color: #6B7280; }
+
+.form-section-title {
+  font-size: 13px; font-weight: 700; color: #1E3A2B;
+  padding: 4px 0; border-bottom: 2px solid #E5E7EB;
+  margin-top: 4px;
+}
+
+/* FOTO */
+.photo-group { display: flex; flex-direction: column; gap: 8px; }
+.photo-btn {
+  background: #fff; border: 2px dashed #D1D5DB; border-radius: 14px;
+  padding: 18px; display: flex; flex-direction: column; align-items: center;
+  gap: 6px; cursor: pointer; transition: border-color .2s;
+  position: relative; overflow: hidden;
+}
+.photo-btn.captured { border-color: #16a34a; border-style: solid; }
+.photo-btn input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.photo-btn-icon { font-size: 28px; }
+.photo-btn-label { font-size: 13px; font-weight: 600; color: #374151; }
+.photo-btn-sub { font-size: 11px; color: #9CA3AF; }
+.photo-btn.captured .photo-btn-label { color: #16a34a; }
+.photo-preview { width: 100%; height: 140px; object-fit: cover; border-radius: 12px; display: none; }
+.photo-preview.visible { display: block; }
+
+.btn-submit {
+  background: #1E3A2B; color: #fff; border: none; border-radius: 14px;
+  padding: 16px; font-size: 15px; font-weight: 700; font-family: inherit;
+  cursor: pointer; width: 100%; margin-top: 8px;
+  transition: background .2s;
+}
+.btn-submit:active { background: #2D5A3D; }
+.btn-submit.gold { background: #C9A84C; color: #1E3A2B; }
+
+/* ENTREGA — carros em uso */
+.em-uso-card {
+  background: #fff; border-radius: 16px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 14px;
+  cursor: pointer; box-shadow: 0 1px 6px rgba(0,0,0,.06);
+  border: 1px solid #F3F4F6;
+}
+.em-uso-photo {
+  width: 52px; height: 52px; border-radius: 12px; object-fit: cover;
+  background: #F3F4F6; display: flex; align-items: center; justify-content: center;
+  font-size: 24px; flex-shrink: 0;
+}
+.em-uso-info { flex: 1; }
+.em-uso-condutor { font-size: 13px; font-weight: 700; color: #1A1A1A; }
+.em-uso-veiculo { font-size: 12px; color: #6B7280; margin-top: 2px; }
+.em-uso-saiu { font-size: 11px; color: #D97706; font-weight: 600; margin-top: 4px; }
+.em-uso-km { font-size: 11px; color: #9CA3AF; }
+
+/* HISTÓRICO */
+.historico-tabs {
+  display: flex; gap: 0; background: #fff; border-bottom: 1px solid #E5E7EB;
+}
+.historico-tab {
+  flex: 1; padding: 12px; text-align: center; font-size: 12px; font-weight: 600;
+  color: #9CA3AF; cursor: pointer; border-bottom: 2px solid transparent;
+}
+.historico-tab.active { color: #1E3A2B; border-bottom-color: #C9A84C; }
+.historico-item {
+  background: #fff; margin: 0 20px 10px; border-radius: 14px;
+  padding: 14px; box-shadow: 0 1px 6px rgba(0,0,0,.05);
+}
+.historico-row { display: flex; justify-content: space-between; align-items: flex-start; }
+.historico-veiculo { font-size: 14px; font-weight: 700; color: #1A1A1A; }
+.historico-badge {
+  font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px;
+}
+.historico-badge.retirada { background: #DBEAFE; color: #1E40AF; }
+.historico-badge.entrega { background: #DCFCE7; color: #166534; }
+.historico-badge.abastecimento { background: #FEF3C7; color: #92400E; }
+.historico-detail { font-size: 12px; color: #6B7280; margin-top: 4px; }
+.historico-date { font-size: 11px; color: #9CA3AF; margin-top: 6px; }
+
+/* COLABORADORES */
+.colab-card {
+  background: #fff; border-radius: 14px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.05);
+}
+.colab-avatar {
+  width: 44px; height: 44px; border-radius: 50%; background: #1E3A2B;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; color: #C9A84C; flex-shrink: 0;
+}
+.colab-name { font-size: 14px; font-weight: 700; color: #1A1A1A; }
+.colab-role { font-size: 12px; color: #6B7280; }
+.colab-unidade { font-size: 10px; color: #C9A84C; font-weight: 600; margin-top: 2px; }
+
+/* SUCESSO */
+.success-screen {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 32px; text-align: center; gap: 16px;
+}
+.success-icon { font-size: 64px; }
+.success-title { font-size: 22px; font-weight: 800; color: #1E3A2B; }
+.success-sub { font-size: 14px; color: #6B7280; line-height: 1.6; }
+.success-code { background: #1E3A2B; color: #C9A84C; font-size: 13px; font-weight: 700; padding: 8px 20px; border-radius: 20px; margin-top: 4px; }
+
+/* ABASTECIMENTO */
+.litros-display {
+  background: #1E3A2B; border-radius: 16px; padding: 20px;
+  text-align: center; margin-bottom: 4px;
+}
+.litros-val { font-size: 48px; font-weight: 900; color: #C9A84C; line-height: 1; }
+.litros-label { font-size: 12px; color: rgba(255,255,255,.5); margin-top: 4px; }
+
+.phone-home-indicator {
+  height: 34px; background: #F5F0E6; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.phone-home-bar { width: 120px; height: 5px; background: #1E3A2B; border-radius: 3px; opacity: .3; }
+
+/* ABASTECIMENTO pill */
+.combustivel-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill {
+  padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  border: 2px solid #E5E7EB; background: #fff; cursor: pointer; color: #374151;
+}
+.pill.active { border-color: #1E3A2B; background: #1E3A2B; color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="phone-notch">
+    <span class="phone-notch-time">9:41</span>
+    <span class="phone-notch-icons">📶 🔋</span>
+  </div>
+
+  <!-- ============ HOME ============ -->
+  <div class="screen active" id="screen-home">
+    <div class="home-top">
+      <div class="home-logo-row">
+        <div class="home-logo-badge">
+          <div class="home-logo-icon">CR</div>
+          <div class="home-logo-text">
+            <h3>Clara Resorts</h3>
+            <p>Gestão de Frota</p>
+          </div>
+        </div>
+        <span class="home-date">Ter, 21 Abr</span>
+      </div>
+      <div class="home-greeting">Bem-vindo de volta,</div>
+      <div class="home-name">João Silva 👋</div>
+    </div>
+
+    <div class="home-stats">
+      <div class="home-stat">
+        <div class="home-stat-val">3</div>
+        <div class="home-stat-label">Veículos</div>
+      </div>
+      <div class="home-stat">
+        <div class="home-stat-val" style="color:#D97706">1</div>
+        <div class="home-stat-label">Em uso hoje</div>
+      </div>
+      <div class="home-stat">
+        <div class="home-stat-val" style="color:#16a34a">2</div>
+        <div class="home-stat-label">Disponíveis</div>
+      </div>
+    </div>
+
+    <div class="home-grid">
+      <button class="home-btn green" onclick="goTo('screen-retirada-veiculos')">
+        <div>
+          <div class="home-btn-label">Registrar Retirada</div>
+          <div class="home-btn-sub">Saída de veículo</div>
+        </div>
+        <span class="home-btn-arrow">›</span>
+      </button>
+      <button class="home-btn amber" onclick="goTo('screen-entrega-lista')">
+        <div>
+          <div class="home-btn-label">Registrar Entrega</div>
+          <div class="home-btn-sub">Retorno de veículo</div>
+        </div>
+        <span class="home-btn-arrow">›</span>
+      </button>
+      <button class="home-btn blue" onclick="goTo('screen-abastecimento')">
+        <div>
+          <div class="home-btn-label">Abastecimento</div>
+          <div class="home-btn-sub">Registrar combustível</div>
+        </div>
+        <span class="home-btn-arrow">›</span>
+      </button>
+      <button class="home-btn red" onclick="goTo('screen-manutencao')">
+        <div>
+          <div class="home-btn-label">Manutenção</div>
+          <div class="home-btn-sub">Abrir OS</div>
+        </div>
+        <span class="home-btn-arrow">›</span>
+      </button>
+      <button class="home-btn purple" onclick="goTo('screen-historico')">
+        <div>
+          <div class="home-btn-label">Histórico</div>
+          <div class="home-btn-sub">Registros anteriores</div>
+        </div>
+        <span class="home-btn-arrow">›</span>
+      </button>
+      <button class="home-btn teal" onclick="goTo('screen-colaboradores')">
+        <div>
+          <div class="home-btn-label">Colaboradores</div>
+          <div class="home-btn-sub">Equipe</div>
+        </div>
+        <span class="home-btn-arrow">›</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ RETIRADA — LISTA VEÍCULOS ============ -->
+  <div class="screen" id="screen-retirada-veiculos">
+    <div class="app-header">
+      <button class="app-header-back" onclick="goTo('screen-home')">←</button>
+      <div class="app-header-info">
+        <div class="app-header-title">Registrar Retirada</div>
+        <div class="app-header-sub">Selecione o veículo</div>
+      </div>
+    </div>
+    <div class="veiculo-search">
+      <input type="text" placeholder="🔍  Buscar veículo ou placa...">
+    </div>
+    <div class="veiculo-list">
+      <div class="veiculo-card" onclick="goTo('screen-retirada-form')">
+        <img class="veiculo-card-icon" src="https://loremflickr.com/144/112/fiat,strada,pickup?lock=33" alt="Strada">
+        <div class="veiculo-card-info">
+          <div class="veiculo-card-name">Strada</div>
+          <div class="veiculo-card-placa">MNP-2F88</div>
+          <div style="font-size:11px;color:#6B7280;margin-top:3px">Fiat · Branca</div>
+        </div>
+        <span class="veiculo-card-status disponivel">Disponível</span>
+      </div>
+      <div class="veiculo-card" onclick="goTo('screen-retirada-form')">
+        <img class="veiculo-card-icon" src="https://loremflickr.com/144/112/fiat,pickup,truck?lock=66" alt="Strada Working">
+        <div class="veiculo-card-info">
+          <div class="veiculo-card-name">Strada Working</div>
+          <div class="veiculo-card-placa">BRT-5K12</div>
+          <div style="font-size:11px;color:#6B7280;margin-top:3px">Fiat · Prata</div>
+        </div>
+        <span class="veiculo-card-status disponivel">Disponível</span>
+      </div>
+      <div class="veiculo-card" style="opacity:.55;pointer-events:none">
+        <img class="veiculo-card-icon" src="https://loremflickr.com/144/112/volkswagen,pickup,saveiro?lock=88" alt="Saveiro">
+        <div class="veiculo-card-info">
+          <div class="veiculo-card-name">Saveiro Robust</div>
+          <div class="veiculo-card-placa">HVS-3D71</div>
+          <div style="font-size:11px;color:#6B7280;margin-top:3px">Volkswagen · Prata</div>
+        </div>
+        <span class="veiculo-card-status em-uso">Em uso</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ RETIRADA — FORMULÁRIO ============ -->
+  <div class="screen" id="screen-retirada-form">
+    <div class="app-header">
+      <button class="app-header-back" onclick="goTo('screen-retirada-veiculos')">←</button>
+      <div class="app-header-info">
+        <div class="app-header-title">Nova Retirada</div>
+        <div class="app-header-sub">Preencha os dados</div>
+      </div>
+    </div>
+    <div class="form-veiculo-banner">
+      <img class="form-veiculo-icon" src="https://loremflickr.com/144/112/fiat,strada,pickup?lock=33" alt="Strada">
+      <div>
+        <div class="form-veiculo-name">Strada</div>
+        <div class="form-veiculo-placa">MNP-2F88 · Branca</div>
+        <div class="form-veiculo-unidade">Fiat · KM atual: 32.640</div>
+      </div>
+    </div>
+    <div class="form-body">
+      <div class="form-section-title">Dados da Retirada</div>
+
+      <div class="form-group">
+        <label class="form-label">Data e Hora</label>
+        <input class="form-input" type="text" value="21/04/2026 — 09:41" readonly>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Responsável</label>
+        <input class="form-input" type="text" placeholder="Nome do responsável">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Finalidade / Tipo de Uso</label>
+        <select class="form-select">
+          <option value="">Selecione...</option>
+          <option>Transporte de hóspedes</option>
+          <option>Compras / Suprimentos</option>
+          <option>Serviço externo</option>
+          <option>Manutenção</option>
+          <option>Uso administrativo</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Condutor</label>
+        <input class="form-input" type="text" placeholder="Nome do condutor">
+      </div>
+      <div class="form-group">
+        <label class="form-label">KM Atual</label>
+        <input class="form-input" type="number" placeholder="Ex: 48.320">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Destino</label>
+        <input class="form-input" type="text" placeholder="Ex: Supermercado BH, SP">
+      </div>
+
+      <div class="form-section-title">Fotos Obrigatórias</div>
+
+      <div class="photo-group">
+        <label class="form-label">Foto da Quilometragem</label>
+        <div class="photo-btn" id="photo-km-btn" onclick="simulatePhoto('photo-km-btn','photo-km-preview','📸 Foto salva!')">
+          <div class="photo-btn-icon">📷</div>
+          <div class="photo-btn-label">Tirar foto do painel / KM</div>
+          <div class="photo-btn-sub">Toque para abrir a câmera</div>
+        </div>
+        <div class="photo-preview" id="photo-km-preview" style="background:#1E3A2B;display:none;align-items:center;justify-content:center;font-size:32px">📊</div>
+      </div>
+
+      <div class="photo-group">
+        <label class="form-label">Foto do Condutor</label>
+        <div class="photo-btn" id="photo-cond-btn" onclick="simulatePhoto('photo-cond-btn','photo-cond-preview','✅ Condutor registrado!')">
+          <div class="photo-btn-icon">🤳</div>
+          <div class="photo-btn-label">Tirar selfie do condutor</div>
+          <div class="photo-btn-sub">Câmera frontal recomendada</div>
+        </div>
+        <div class="photo-preview" id="photo-cond-preview" style="background:#2D5A3D;display:none;align-items:center;justify-content:center;font-size:32px">👤</div>
+      </div>
+
+      <button class="btn-submit" onclick="goTo('screen-retirada-sucesso')">✓ Registrar Retirada</button>
+    </div>
+  </div>
+
+  <!-- ============ RETIRADA — SUCESSO ============ -->
+  <div class="screen" id="screen-retirada-sucesso">
+    <div class="success-screen">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Retirada Registrada!</div>
+      <div class="success-sub">A saída do veículo foi registrada com sucesso e já está visível no dashboard.</div>
+      <div class="success-code"># REF-2026-0421-001</div>
+      <button class="btn-submit" style="margin-top:16px" onclick="goTo('screen-home')">← Voltar ao Menu</button>
+      <button class="btn-submit gold" style="margin-top:8px" onclick="goTo('screen-retirada-veiculos')">Nova Retirada</button>
+    </div>
+  </div>
+
+  <!-- ============ ENTREGA — LISTA ============ -->
+  <div class="screen" id="screen-entrega-lista">
+    <div class="app-header">
+      <button class="app-header-back" onclick="goTo('screen-home')">←</button>
+      <div class="app-header-info">
+        <div class="app-header-title">Registrar Entrega</div>
+        <div class="app-header-sub">Veículos em uso agora</div>
+      </div>
+    </div>
+    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+      <div class="em-uso-card" onclick="goTo('screen-entrega-form')">
+        <img class="em-uso-photo" src="https://randomuser.me/api/portraits/men/57.jpg" alt="Roberto" style="object-fit:cover;border-radius:12px">
+        <div class="em-uso-info">
+          <div class="em-uso-condutor">Roberto Lima</div>
+          <div class="em-uso-veiculo">🛻 Saveiro Robust · HVS-3D71</div>
+          <div class="em-uso-saiu">⏱ Saiu às 06:00 · → SP Capital</div>
+          <div class="em-uso-km">KM saída: 94.100</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ENTREGA — FORM ============ -->
+  <div class="screen" id="screen-entrega-form">
+    <div class="app-header">
+      <button class="app-header-back" onclick="goTo('screen-entrega-lista')">←</button>
+      <div class="app-header-info">
+        <div class="app-header-title">Registrar Entrega</div>
+        <div class="app-header-sub">Retorno do veículo</div>
+      </div>
+    </div>
+    <div class="form-veiculo-banner">
+      <img class="form-veiculo-icon" src="https://loremflickr.com/144/112/volkswagen,pickup,saveiro?lock=88" alt="Saveiro">
+      <div>
+        <div class="form-veiculo-name">Saveiro Robust · Roberto Lima</div>
+        <div class="form-veiculo-placa">HVS-3D71 · Saiu às 06:00</div>
+        <div class="form-veiculo-unidade">KM de saída: 94.100</div>
+      </div>
+    </div>
+    <div class="form-body">
+      <div class="form-section-title">Dados do Retorno</div>
+      <div class="form-group">
+        <label class="form-label">KM Final</label>
+        <input class="form-input" type="number" placeholder="Ex: 48.520">
+      </div>
+      <div class="form-group">
+        <label class="form-label">KM Utilizado</label>
+        <input class="form-input" type="text" value="Calculado automaticamente" readonly>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <input class="form-input" type="text" placeholder="Alguma ocorrência? (opcional)">
+      </div>
+
+      <div class="form-section-title">Fotos Obrigatórias</div>
+
+      <div class="photo-group">
+        <label class="form-label">Foto da Quilometragem Final</label>
+        <div class="photo-btn" id="photo-km2-btn" onclick="simulatePhoto('photo-km2-btn','photo-km2-preview','📸 KM registrado!')">
+          <div class="photo-btn-icon">📷</div>
+          <div class="photo-btn-label">Foto do painel / KM final</div>
+          <div class="photo-btn-sub">Toque para abrir a câmera</div>
+        </div>
+        <div class="photo-preview" id="photo-km2-preview" style="background:#1E3A2B;display:none;align-items:center;justify-content:center;font-size:32px">📊</div>
+      </div>
+
+      <div class="photo-group">
+        <label class="form-label">Foto do Condutor</label>
+        <div class="photo-btn" id="photo-cond2-btn" onclick="simulatePhoto('photo-cond2-btn','photo-cond2-preview','✅ Condutor confirmado!')">
+          <div class="photo-btn-icon">🤳</div>
+          <div class="photo-btn-label">Selfie do condutor</div>
+          <div class="photo-btn-sub">Câmera frontal recomendada</div>
+        </div>
+        <div class="photo-preview" id="photo-cond2-preview" style="background:#2D5A3D;display:none;align-items:center;justify-content:center;font-size:32px">👤</div>
+      </div>
+
+      <div class="photo-group">
+        <label class="form-label">Fotos do Veículo</label>
+        <div class="photo-btn" id="photo-car-btn" onclick="simulatePhoto('photo-car-btn','photo-car-preview','🚗 Veículo registrado!')">
+          <div class="photo-btn-icon">📸</div>
+          <div class="photo-btn-label">Fotos do veículo (frente e traseira)</div>
+          <div class="photo-btn-sub">Registre o estado de devolução</div>
+        </div>
+        <div class="photo-preview" id="photo-car-preview" style="background:#4A8060;display:none;align-items:center;justify-content:center;font-size:32px">🚐</div>
+      </div>
+
+      <button class="btn-submit gold" onclick="goTo('screen-entrega-sucesso')">✓ Confirmar Entrega</button>
+    </div>
+  </div>
+
+  <!-- ============ ENTREGA — SUCESSO ============ -->
+  <div class="screen" id="screen-entrega-sucesso">
+    <div class="success-screen">
+      <div class="success-icon">🔑</div>
+      <div class="success-title">Entrega Confirmada!</div>
+      <div class="success-sub">O veículo foi devolvido com sucesso.<br>KM utilizado: <strong>200 km</strong></div>
+      <div class="success-code"># DEV-2026-0421-001</div>
+      <button class="btn-submit" style="margin-top:16px" onclick="goTo('screen-home')">← Voltar ao Menu</button>
+    </div>
+  </div>
+
+  <!-- ============ ABASTECIMENTO ============ -->
+  <div class="screen" id="screen-abastecimento">
+    <div class="app-header">
+      <button class="app-header-back" onclick="goTo('screen-home')">←</button>
+      <div class="app-header-info">
+        <div class="app-header-title">Abastecimento</div>
+        <div class="app-header-sub">Registrar combustível</div>
+      </div>
+    </div>
+    <div class="form-body">
+      <div class="litros-display">
+        <div class="litros-val">0,00 L</div>
+        <div class="litros-label">Litros abastecidos</div>
+      </div>
+      <div class="form-section-title">Dados do Abastecimento</div>
+      <div class="form-group">
+        <label class="form-label">Veículo</label>
+        <select class="form-select">
+          <option>Selecione o veículo...</option>
+          <option>Strada — MNP-2F88</option>
+          <option>Strada Working — BRT-5K12</option>
+          <option>Saveiro Robust — HVS-3D71</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tipo de Combustível</label>
+        <div class="combustivel-pills">
+          <span class="pill active">Gasolina</span>
+          <span class="pill">Etanol</span>
+          <span class="pill">Diesel</span>
+          <span class="pill">Elétrico</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Litros</label>
+        <input class="form-input" type="number" placeholder="Ex: 40">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Valor Total (R$)</label>
+        <input class="form-input" type="number" placeholder="Ex: 280,00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Posto / Local</label>
+        <input class="form-input" type="text" placeholder="Nome do posto">
+      </div>
+      <div class="photo-group">
+        <label class="form-label">Foto do Cupom Fiscal</label>
+        <div class="photo-btn" id="photo-cupom-btn" onclick="simulatePhoto('photo-cupom-btn','photo-cupom-preview','🧾 Cupom salvo!')">
+          <div class="photo-btn-icon">🧾</div>
+          <div class="photo-btn-label">Foto do cupom / nota</div>
+          <div class="photo-btn-sub">Obrigatório para prestação de contas</div>
+        </div>
+        <div class="photo-preview" id="photo-cupom-preview" style="background:#4A8060;display:none;align-items:center;justify-content:center;font-size:32px">🧾</div>
+      </div>
+      <button class="btn-submit" onclick="goTo('screen-home')">✓ Registrar Abastecimento</button>
+    </div>
+  </div>
+
+  <!-- ============ MANUTENÇÃO ============ -->
+  <div class="screen" id="screen-manutencao">
+    <div class="app-header">
+      <button class="app-header-back" onclick="goTo('screen-home')">←</button>
+      <div class="app-header-info">
+        <div class="app-header-title">Manutenção Veicular</div>
+        <div class="app-header-sub">Abrir ordem de serviço</div>
+      </div>
+    </div>
+    <div class="form-body">
+      <div class="form-section-title">Nova OS</div>
+      <div class="form-group">
+        <label class="form-label">Veículo</label>
+        <select class="form-select">
+          <option>Selecione o veículo...</option>
+          <option>Strada — MNP-2F88</option>
+          <option>Strada Working — BRT-5K12</option>
+          <option>Saveiro Robust — HVS-3D71</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tipo de Manutenção</label>
+        <select class="form-select">
+          <option>Mecânica</option><option>Elétrica</option>
+          <option>Funilaria</option><option>Pneu</option>
+          <option>Borracharia</option><option>Limpeza</option><option>Outros</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descrição do Problema</label>
+        <input class="form-input" type="text" placeholder="Descreva o problema...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Prestador / Oficina</label>
+        <input class="form-input" type="text" placeholder="Nome da oficina ou prestador">
+      </div>
+      <div class="photo-group">
+        <label class="form-label">Foto do Problema</label>
+        <div class="photo-btn" id="photo-os-btn" onclick="simulatePhoto('photo-os-btn','photo-os-preview','📸 Foto registrada!')">
+          <div class="photo-btn-icon">📷</div>
+          <div class="photo-btn-label">Registrar o problema visualmente</div>
+          <div class="photo-btn-sub">Opcional mas recomendado</div>
+        </div>
+        <div class="photo-preview" id="photo-os-preview" style="background:#991B1B;display:none;align-items:center;justify-content:center;font-size:32px">🔧</div>
+      </div>
+      <button class="btn-submit" onclick="goTo('screen-home')">✓ Abrir Ordem de Serviço</button>
+    </div>
+  </div>
+
+  <!-- ============ HISTÓRICO ============ -->
+  <div class="screen" id="screen-historico">
+    <div class="app-header">
+      <button class="app-header-back" onclick="goTo('screen-home')">←</button>
+      <div class="app-header-info">
+        <div class="app-header-title">Histórico</div>
+        <div class="app-header-sub">Todos os registros</div>
+      </div>
+    </div>
+    <div class="historico-tabs">
+      <div class="historico-tab active">Todos</div>
+      <div class="historico-tab">Retiradas</div>
+      <div class="historico-tab">Entregas</div>
+      <div class="historico-tab">Abast.</div>
+    </div>
+    <div style="padding:14px 0;display:flex;flex-direction:column;gap:0">
+      <div style="padding:8px 20px 4px;font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.5px">Hoje — 21/04</div>
+      <div class="historico-item">
+        <div class="historico-row">
+          <div class="historico-veiculo">🚐 Kombi</div>
+          <span class="historico-badge retirada">Retirada</span>
+        </div>
+        <div class="historico-detail">Carlos Mendes · Ibiúna → SP</div>
+        <div class="historico-date">07:30 · KM 48.320</div>
+      </div>
+      <div class="historico-item">
+        <div class="historico-row">
+          <div class="historico-veiculo">⚡ Elétrico</div>
+          <span class="historico-badge retirada">Retirada</span>
+        </div>
+        <div class="historico-detail">Ana Paula · Dourado</div>
+        <div class="historico-date">08:15 · KM 12.450</div>
+      </div>
+      <div style="padding:8px 20px 4px;font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.5px">Ontem — 20/04</div>
+      <div class="historico-item">
+        <div class="historico-row">
+          <div class="historico-veiculo">🛻 Strada</div>
+          <span class="historico-badge entrega">Entrega</span>
+        </div>
+        <div class="historico-detail">Roberto Lima · KM utilizado: 148 km</div>
+        <div class="historico-date">18:40 · KM final 32.788</div>
+      </div>
+      <div class="historico-item">
+        <div class="historico-row">
+          <div class="historico-veiculo">🛻 Saveiro Robust</div>
+          <span class="historico-badge abastecimento">Abastecimento</span>
+        </div>
+        <div class="historico-detail">60 L · Diesel · R$ 420,00</div>
+        <div class="historico-date">14:20 · Posto BR Ibiúna</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ COLABORADORES ============ -->
+  <div class="screen" id="screen-colaboradores">
+    <div class="app-header">
+      <button class="app-header-back" onclick="goTo('screen-home')">←</button>
+      <div class="app-header-info">
+        <div class="app-header-title">Colaboradores</div>
+        <div class="app-header-sub">Equipe habilitada</div>
+      </div>
+    </div>
+    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+      <div class="colab-card">
+        <img src="https://randomuser.me/api/portraits/men/32.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0">
+        <div>
+          <div class="colab-name">Carlos Mendes</div>
+          <div class="colab-role">Motorista · CNH B</div>
+          <div class="colab-unidade">Ibiúna</div>
+        </div>
+      </div>
+      <div class="colab-card">
+        <img src="https://randomuser.me/api/portraits/women/44.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0">
+        <div>
+          <div class="colab-name">Ana Paula Souza</div>
+          <div class="colab-role">Coordenadora · CNH B</div>
+          <div class="colab-unidade">Dourado</div>
+        </div>
+      </div>
+      <div class="colab-card">
+        <img src="https://randomuser.me/api/portraits/men/57.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0">
+        <div>
+          <div class="colab-name">Roberto Lima</div>
+          <div class="colab-role">Motorista · CNH D</div>
+          <div class="colab-unidade">Arte</div>
+        </div>
+      </div>
+      <div class="colab-card">
+        <img src="https://randomuser.me/api/portraits/men/11.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0">
+        <div>
+          <div class="colab-name">João Silva</div>
+          <div class="colab-role">Gestor de Frota · CNH B</div>
+          <div class="colab-unidade">Ibiúna</div>
+        </div>
+      </div>
+      <div class="colab-card">
+        <img src="https://randomuser.me/api/portraits/women/28.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0">
+        <div>
+          <div class="colab-name">Fernanda Ramos</div>
+          <div class="colab-role">Recepcionista · CNH B</div>
+          <div class="colab-unidade">Dourado</div>
+        </div>
+      </div>
+      <div class="colab-card">
+        <img src="https://randomuser.me/api/portraits/men/74.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0">
+        <div>
+          <div class="colab-name">Márcio Oliveira</div>
+          <div class="colab-role">Motorista · CNH D</div>
+          <div class="colab-unidade">Arte</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phone-home-indicator"><div class="phone-home-bar"></div></div>
+</div>
+
+<script>
+function goTo(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById(screenId);
+  if (target) {
+    target.classList.add('active');
+    target.scrollTop = 0;
+  }
+}
+
+function simulatePhoto(btnId, previewId, msg) {
+  const btn = document.getElementById(btnId);
+  const preview = document.getElementById(previewId);
+  btn.classList.add('captured');
+  btn.querySelector('.photo-btn-label').textContent = msg;
+  btn.querySelector('.photo-btn-sub').textContent = 'Toque para substituir';
+  preview.style.display = 'flex';
+}
+
+// Pills de combustível
+document.querySelectorAll('.pill').forEach(p => {
+  p.addEventListener('click', () => {
+    p.closest('.combustivel-pills').querySelectorAll('.pill').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+  });
+});
+
+// Tabs histórico
+document.querySelectorAll('.historico-tab').forEach(t => {
+  t.addEventListener('click', () => {
+    t.closest('.historico-tabs').querySelectorAll('.historico-tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

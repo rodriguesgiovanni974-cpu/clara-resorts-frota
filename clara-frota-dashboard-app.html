@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Clara Resorts Frota</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+:root {
+  --green-dark:#1E3A2B; --green:#2D5A3D; --green-light:#4A8060;
+  --gold:#C9A84C; --gold-light:#E8CC7A;
+  --bg:#F0EDE6; --white:#FFFFFF; --text:#1A1A1A; --muted:#6B7280; --border:#E5E7EB;
+  --sidebar-w:240px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--green-dark);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;}
+.sidebar-logo{padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:10px;}
+.sidebar-logo-icon{width:36px;height:36px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:var(--green-dark);}
+.sidebar-logo-text h2{font-size:13px;font-weight:700;color:#fff;}
+.sidebar-logo-text p{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px;}
+.sidebar-nav{flex:1;padding:14px 10px;overflow-y:auto;}
+.nav-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.3);padding:10px 10px 5px;}
+.nav-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;color:rgba(255,255,255,.65);text-decoration:none;font-size:13px;cursor:pointer;margin-bottom:2px;transition:background .15s,color .15s;}
+.nav-link:hover{background:rgba(255,255,255,.07);color:#fff;}
+.nav-link.active{background:rgba(201,168,76,.15);color:var(--gold);font-weight:600;}
+.nav-icon{font-size:15px;width:20px;text-align:center;}
+.sidebar-footer{padding:14px;border-top:1px solid rgba(255,255,255,.08);}
+.user-card{display:flex;align-items:center;gap:10px;}
+.user-avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;}
+.user-name{font-size:12px;font-weight:600;color:#fff;}
+.user-role{font-size:10px;color:rgba(255,255,255,.4);}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar-title{font-size:16px;font-weight:700;color:var(--green-dark);}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.topbar-date{font-size:12px;color:var(--muted);}
+.topbar-badge{background:var(--green-dark);color:var(--gold);font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;}
+.topbar-live{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#16a34a;}
+.live-dot{width:7px;height:7px;background:#16a34a;border-radius:50%;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* PAGES */
+.page{display:none;padding:24px 28px;flex-direction:column;gap:22px;}
+.page.active{display:flex;}
+
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;}
+.kpi-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.kpi-card{background:#fff;border-radius:14px;padding:18px 16px;border-top:3px solid transparent;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.kpi-card.gold{border-color:var(--gold);} .kpi-card.green{border-color:#16a34a;} .kpi-card.amber{border-color:#d97706;}
+.kpi-card.red{border-color:#dc2626;} .kpi-card.blue{border-color:#2563eb;} .kpi-card.teal{border-color:#0891b2;}
+.kpi-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.kpi-value{font-size:28px;font-weight:900;color:var(--green-dark);margin:6px 0 2px;line-height:1;}
+.kpi-sub{font-size:11px;color:var(--muted);}
+
+/* CHARTS */
+.charts-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.charts-2{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;}
+.charts-2b{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.chart-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.chart-card h3{font-size:13px;font-weight:700;color:var(--green-dark);margin-bottom:16px;}
+
+/* EM USO */
+.em-uso-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.em-uso-grid-full{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.em-uso-card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);border-left:4px solid var(--gold);}
+.em-uso-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.em-uso-foto{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;}
+.em-uso-condutor{font-size:13px;font-weight:700;color:var(--text);}
+.em-uso-hora{font-size:11px;color:var(--muted);}
+.em-uso-veiculo-foto{width:100%;height:90px;object-fit:cover;border-radius:8px;margin-bottom:8px;}
+.em-uso-placa{display:inline-block;background:var(--green-dark);color:var(--gold);font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:.5px;margin-bottom:4px;}
+.em-uso-nome{font-size:12px;font-weight:700;color:var(--text);}
+.em-uso-destino{font-size:11px;color:var(--muted);margin-top:2px;}
+.em-uso-km{font-size:11px;color:var(--green);font-weight:600;margin-top:4px;}
+.em-uso-timer{font-size:11px;color:#d97706;font-weight:600;}
+
+/* VEICULO CARD (disponivel) */
+.veiculo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.veiculo-card-dash{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.veiculo-card-dash img{width:100%;height:120px;object-fit:cover;}
+.veiculo-card-dash-body{padding:12px 14px;}
+.veiculo-card-dash-name{font-size:14px;font-weight:700;color:var(--text);}
+.veiculo-card-dash-placa{font-size:10px;font-weight:700;background:var(--green-dark);color:var(--gold);padding:2px 8px;border-radius:4px;display:inline-block;margin:4px 0;}
+
+/* TABELA */
+.table-card{background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden;}
+.table-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--border);}
+.table-header h3{font-size:14px;font-weight:700;color:var(--green-dark);}
+.table-actions{display:flex;gap:8px;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:10px 16px;text-align:left;background:#FAFAFA;border-bottom:1px solid var(--border);}
+td{font-size:13px;padding:12px 16px;border-bottom:1px solid #F9FAFB;color:var(--text);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#FAFAFA;}
+.condutor-cell{display:flex;align-items:center;gap:8px;}
+.condutor-foto{width:30px;height:30px;border-radius:50%;object-fit:cover;}
+
+/* BADGES */
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;}
+.badge-retirada{background:#DBEAFE;color:#1E40AF;} .badge-entrega{background:#DCFCE7;color:#166534;}
+.badge-abast{background:#FEF3C7;color:#92400E;} .badge-manut{background:#FEE2E2;color:#991B1B;}
+.badge-disponivel{background:#DCFCE7;color:#166534;} .badge-em-uso{background:#FEF3C7;color:#92400E;}
+.badge-aberta{background:#FEE2E2;color:#991B1B;} .badge-concluida{background:#DCFCE7;color:#166534;}
+
+/* ALERTAS */
+.alertas-list{display:flex;flex-direction:column;gap:8px;}
+.alerta-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;font-size:12px;}
+.alerta-item.warn{background:#FEF3C7;color:#92400E;} .alerta-item.info{background:#DBEAFE;color:#1E40AF;} .alerta-item.ok{background:#DCFCE7;color:#166534;}
+
+/* COLAB */
+.colab-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.colab-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06);display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;}
+.colab-avatar{width:64px;height:64px;border-radius:50%;object-fit:cover;}
+.colab-name{font-size:14px;font-weight:700;color:var(--text);}
+.colab-role{font-size:11px;color:var(--muted);}
+.colab-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--green-dark);color:var(--gold);}
+
+/* SECTION TITLE */
+.section-title{font-size:13px;font-weight:700;color:var(--green-dark);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.section-title span{font-size:11px;font-weight:500;color:var(--muted);}
+
+/* UNIDADE CARD */
+.unidade-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.unidade-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.unidade-card h4{font-size:15px;font-weight:800;color:var(--green-dark);margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--gold);}
+.unidade-stat{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid #F3F4F6;}
+.unidade-stat:last-child{border-bottom:none;}
+.unidade-stat-label{color:var(--muted);}
+.unidade-stat-val{font-weight:700;color:var(--text);}
+
+/* BTN */
+.btn{font-size:12px;padding:6px 14px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:600;}
+.btn-primary{background:var(--green-dark);color:#fff;}
+.btn-secondary{background:#F3F4F6;color:var(--text);}
+select.filter{font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;background:#fff;}
+
+/* CONFIG */
+.config-section{background:#fff;border-radius:14px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.config-section h4{font-size:14px;font-weight:700;color:var(--green-dark);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.config-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #F9FAFB;}
+.config-row:last-child{border-bottom:none;}
+.config-label{font-size:13px;font-weight:600;color:var(--text);}
+.config-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.toggle{width:44px;height:24px;background:#16a34a;border-radius:12px;position:relative;cursor:pointer;}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;right:3px;transition:.2s;}
+.toggle.off{background:#D1D5DB;}
+.toggle.off::after{right:unset;left:3px;}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">CR</div>
+    <div class="sidebar-logo-text"><h2>Clara Resorts</h2><p>Controle de Frota</p></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Principal</div>
+    <a class="nav-link active" onclick="goTo('dashboard','Dashboard — Visão Geral')"><span class="nav-icon">📊</span>Dashboard</a>
+    <a class="nav-link" onclick="goTo('em-uso','Veículos em Uso Agora')"><span class="nav-icon">🚗</span>Veículos em Uso</a>
+    <a class="nav-link" onclick="goTo('movimentacoes','Movimentações')"><span class="nav-icon">📋</span>Movimentações</a>
+    <a class="nav-link" onclick="goTo('abastecimentos','Abastecimentos')"><span class="nav-icon">⛽</span>Abastecimentos</a>
+    <a class="nav-link" onclick="goTo('manutencoes','Manutenções')"><span class="nav-icon">🔧</span>Manutenções</a>
+    <div class="nav-label">Relatórios</div>
+    <a class="nav-link" onclick="goTo('por-unidade','Relatório por Unidade')"><span class="nav-icon">📈</span>Por Unidade</a>
+    <a class="nav-link" onclick="goTo('por-veiculo','Relatório por Veículo')"><span class="nav-icon">🚙</span>Por Veículo</a>
+    <a class="nav-link" onclick="goTo('por-condutor','Relatório por Condutor')"><span class="nav-icon">👤</span>Por Condutor</a>
+    <div class="nav-label">Administração</div>
+    <a class="nav-link" onclick="goTo('colaboradores','Colaboradores')"><span class="nav-icon">👥</span>Colaboradores</a>
+    <a class="nav-link" onclick="goTo('configuracoes','Configurações')"><span class="nav-icon">⚙️</span>Configurações</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <img class="user-avatar" src="https://randomuser.me/api/portraits/men/11.jpg">
+      <div><div class="user-name">João Silva</div><div class="user-role">Gestor de Frota</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title" id="topbar-title">Dashboard — Visão Geral</span>
+    <div class="topbar-right">
+      <div class="topbar-live"><div class="live-dot"></div>Ao vivo</div>
+      <span class="topbar-badge">Ibiúna · Dourado · Arte</span>
+      <span class="topbar-date">Segunda-feira, 21 de Abril de 2026</span>
+    </div>
+  </div>
+
+  <!-- ======== DASHBOARD ======== -->
+  <div class="page active" id="page-dashboard">
+    <div class="kpi-grid">
+      <div class="kpi-card gold"><div class="kpi-label">Retiradas Hoje</div><div class="kpi-value">5</div><div class="kpi-sub">+1 vs. ontem</div></div>
+      <div class="kpi-card green"><div class="kpi-label">Entregas Hoje</div><div class="kpi-value">4</div><div class="kpi-sub">1 em aberto</div></div>
+      <div class="kpi-card amber"><div class="kpi-label">Veículos em Uso</div><div class="kpi-value">1</div><div class="kpi-sub">de 3 na frota</div></div>
+      <div class="kpi-card blue"><div class="kpi-label">KM Percorrido Hoje</div><div class="kpi-value">342</div><div class="kpi-sub">km rodados</div></div>
+      <div class="kpi-card teal"><div class="kpi-label">Abastecimentos</div><div class="kpi-value">2</div><div class="kpi-sub">R$ 574,00 gastos</div></div>
+      <div class="kpi-card red"><div class="kpi-label">OS Abertas</div><div class="kpi-value">0</div><div class="kpi-sub">nenhuma pendente</div></div>
+    </div>
+
+    <div>
+      <div class="section-title">🚗 Veículos em Uso Agora <span>atualizado às 09:41</span></div>
+      <div class="em-uso-grid">
+        <div class="em-uso-card">
+          <div class="em-uso-header">
+            <img class="em-uso-foto" src="https://randomuser.me/api/portraits/men/57.jpg">
+            <div><div class="em-uso-condutor">Roberto Lima</div><div class="em-uso-hora">⏱ Saiu às 06:00</div></div>
+          </div>
+          <img class="em-uso-veiculo-foto" src="https://loremflickr.com/300/160/volkswagen,pickup,saveiro?lock=88">
+          <div class="em-uso-placa">HVS-3D71</div>
+          <div class="em-uso-nome">Saveiro Robust — Volkswagen</div>
+          <div class="em-uso-destino">📍 → SP Capital</div>
+          <div class="em-uso-km">KM saída: 94.100</div>
+          <div class="em-uso-timer">3h 41min em uso</div>
+        </div>
+        <div class="em-uso-card" style="border-left-color:#E5E7EB;background:#FAFAFA;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;grid-column:span 3;">
+          <div style="font-size:36px">🅿️</div>
+          <div style="font-size:13px;font-weight:700;color:#9CA3AF">4 veículos disponíveis</div>
+          <div style="font-size:11px;color:#D1D5DB">Strada · Strada Working</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="charts-3">
+      <div class="chart-card"><h3>📅 Movimentações por Dia</h3><canvas id="chartDia" height="180"></canvas></div>
+      <div class="chart-card"><h3>🏨 Retiradas por Unidade</h3><canvas id="chartUnidade" height="180"></canvas></div>
+      <div class="chart-card"><h3>⛽ Combustível por Tipo</h3><canvas id="chartComb" height="180"></canvas></div>
+    </div>
+
+    <div class="charts-2">
+      <div class="chart-card"><h3>🚗 KM por Veículo — Mês Atual</h3><canvas id="chartKM" height="160"></canvas></div>
+      <div class="chart-card"><h3>⚠️ Alertas</h3>
+        <div class="alertas-list" style="margin-top:4px">
+          <div class="alerta-item warn">⚠️ Saveiro Robust há 3h41 em uso — verificar retorno</div>
+          <div class="alerta-item warn">⛽ Strada Working próxima do limite de abastecimento</div>
+          <div class="alerta-item ok">✅ Todas as retiradas com foto registrada hoje</div>
+          <div class="alerta-item ok">✅ Entregas confirmadas com fotos do veículo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== VEÍCULOS EM USO ======== -->
+  <div class="page" id="page-em-uso">
+    <div class="kpi-grid-4">
+      <div class="kpi-card amber"><div class="kpi-label">Em Uso Agora</div><div class="kpi-value">1</div><div class="kpi-sub">Saveiro Robust</div></div>
+      <div class="kpi-card green"><div class="kpi-label">Disponíveis</div><div class="kpi-value">2</div><div class="kpi-sub">prontos para uso</div></div>
+      <div class="kpi-card blue"><div class="kpi-label">Total de Veículos</div><div class="kpi-value">3</div><div class="kpi-sub">frota completa</div></div>
+      <div class="kpi-card red"><div class="kpi-label">Em Manutenção</div><div class="kpi-value">0</div><div class="kpi-sub">nenhum parado</div></div>
+    </div>
+    <div class="section-title">🔴 Em Uso Agora</div>
+    <div class="em-uso-grid-full">
+      <div class="em-uso-card">
+        <div class="em-uso-header">
+          <img class="em-uso-foto" src="https://randomuser.me/api/portraits/men/57.jpg">
+          <div><div class="em-uso-condutor">Roberto Lima</div><div class="em-uso-hora">⏱ Saiu às 06:00 — 3h 41min</div></div>
+        </div>
+        <img class="em-uso-veiculo-foto" src="https://loremflickr.com/400/180/volkswagen,pickup,saveiro?lock=88">
+        <div class="em-uso-placa">HVS-3D71</div>
+        <div class="em-uso-nome">Saveiro Robust — Volkswagen · Prata</div>
+        <div class="em-uso-destino">📍 → SP Capital — Compras/Suprimentos</div>
+        <div class="em-uso-km">KM saída: 94.100 · Previsão de retorno: 14:00</div>
+      </div>
+    </div>
+    <div class="section-title">🟢 Disponíveis</div>
+    <div class="veiculo-grid">
+      <div class="veiculo-card-dash">
+        <img src="https://loremflickr.com/400/200/fiat,strada,pickup?lock=33">
+        <div class="veiculo-card-dash-body">
+          <div class="veiculo-card-dash-name">Strada</div>
+          <div class="veiculo-card-dash-placa">MNP-2F88</div>
+          <div style="font-size:11px;color:#6B7280">Fiat · Branca · KM: 32.640</div>
+          <span class="badge badge-disponivel" style="margin-top:6px">Disponível</span>
+        </div>
+      </div>
+      <div class="veiculo-card-dash">
+        <img src="https://loremflickr.com/400/200/fiat,pickup,truck?lock=66">
+        <div class="veiculo-card-dash-body">
+          <div class="veiculo-card-dash-name">Strada Working</div>
+          <div class="veiculo-card-dash-placa">BRT-5K12</div>
+          <div style="font-size:11px;color:#6B7280">Fiat · Prata · KM: 67.394</div>
+          <span class="badge badge-disponivel" style="margin-top:6px">Disponível</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== MOVIMENTAÇÕES ======== -->
+  <div class="page" id="page-movimentacoes">
+    <div class="kpi-grid-4">
+      <div class="kpi-card gold"><div class="kpi-label">Retiradas Hoje</div><div class="kpi-value">5</div><div class="kpi-sub">do dia</div></div>
+      <div class="kpi-card green"><div class="kpi-label">Entregas Hoje</div><div class="kpi-value">4</div><div class="kpi-sub">do dia</div></div>
+      <div class="kpi-card blue"><div class="kpi-label">KM Total Hoje</div><div class="kpi-value">342</div><div class="kpi-sub">km rodados</div></div>
+      <div class="kpi-card teal"><div class="kpi-label">Fotos Registradas</div><div class="kpi-value">18</div><div class="kpi-sub">todas confirmadas</div></div>
+    </div>
+    <div class="table-card">
+      <div class="table-header">
+        <h3>📋 Histórico Completo de Movimentações</h3>
+        <div class="table-actions">
+          <select class="filter"><option>Todos os tipos</option><option>Retirada</option><option>Entrega</option></select>
+          <select class="filter"><option>Todas as unidades</option><option>Ibiúna</option><option>Dourado</option><option>Arte</option></select>
+          <button class="btn btn-primary">⬇ Exportar CSV</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tipo</th><th>Condutor</th><th>Veículo</th><th>Unidade</th><th>Destino / Finalidade</th><th>KM Saída</th><th>KM Retorno</th><th>KM Usado</th><th>Horário</th><th>Fotos</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge badge-retirada">Retirada</span></td><td><div class="condutor-cell"><img class="condutor-foto" src="https://randomuser.me/api/portraits/men/57.jpg"><span>Roberto Lima</span></div></td><td>Saveiro Robust · HVS-3D71</td><td>Ibiúna</td><td>SP Capital — Compras</td><td>94.100 km</td><td>—</td><td>—</td><td>06:00</td><td style="color:#16a34a;font-weight:600">✓ 2 fotos</td></tr>
+            <tr><td><span class="badge badge-entrega">Entrega</span></td><td><div class="condutor-cell"><img class="condutor-foto" src="https://randomuser.me/api/portraits/men/74.jpg"><span>Márcio Oliveira</span></div></td><td>Strada · MNP-2F88</td><td>Arte</td><td>Retorno de Campinas</td><td>32.640 km</td><td>32.788 km</td><td style="color:#2D5A3D;font-weight:600">148 km</td><td>08:50</td><td style="color:#16a34a;font-weight:600">✓ 5 fotos</td></tr>
+            <tr><td><span class="badge badge-entrega">Entrega</span></td><td><div class="condutor-cell"><img class="condutor-foto" src="https://randomuser.me/api/portraits/women/28.jpg"><span>Fernanda Ramos</span></div></td><td>Strada Working · BRT-5K12</td><td>Dourado</td><td>Retorno de Piracicaba</td><td>67.200 km</td><td>67.394 km</td><td style="color:#2D5A3D;font-weight:600">194 km</td><td>09:20</td><td style="color:#16a34a;font-weight:600">✓ 4 fotos</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== ABASTECIMENTOS ======== -->
+  <div class="page" id="page-abastecimentos">
+    <div class="kpi-grid-4">
+      <div class="kpi-card gold"><div class="kpi-label">Abastecimentos Mês</div><div class="kpi-value">8</div><div class="kpi-sub">este mês</div></div>
+      <div class="kpi-card green"><div class="kpi-label">Total Gasto</div><div class="kpi-value">R$2.340</div><div class="kpi-sub">em combustível</div></div>
+      <div class="kpi-card blue"><div class="kpi-label">Litros Totais</div><div class="kpi-value">318L</div><div class="kpi-sub">abastecidos</div></div>
+      <div class="kpi-card teal"><div class="kpi-label">Ticket Médio</div><div class="kpi-value">R$292</div><div class="kpi-sub">por abastecimento</div></div>
+    </div>
+    <div class="table-card">
+      <div class="table-header">
+        <h3>⛽ Histórico de Abastecimentos</h3>
+        <div class="table-actions">
+          <select class="filter"><option>Todos os veículos</option><option>Strada</option><option>Strada Working</option><option>Saveiro Robust</option></select>
+          <button class="btn btn-primary">⬇ Exportar CSV</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Data</th><th>Veículo</th><th>Condutor</th><th>Combustível</th><th>Litros</th><th>Valor Total</th><th>Posto</th><th>Cupom</th></tr></thead>
+          <tbody>
+            <tr><td>21/04</td><td>Strada Working · BRT-5K12</td><td><div class="condutor-cell"><img class="condutor-foto" src="https://randomuser.me/api/portraits/women/28.jpg"><span>Fernanda Ramos</span></div></td><td>Etanol</td><td>50L</td><td style="font-weight:700;color:#2D5A3D">R$ 280,00</td><td>Posto Ipiranga Dourado</td><td style="color:#16a34a;font-weight:600">✓</td></tr>
+            <tr><td>18/04</td><td>Saveiro Robust · HVS-3D71</td><td><div class="condutor-cell"><img class="condutor-foto" src="https://randomuser.me/api/portraits/men/57.jpg"><span>Roberto Lima</span></div></td><td>Diesel</td><td>60L</td><td style="font-weight:700;color:#2D5A3D">R$ 420,00</td><td>Posto BR Ibiúna</td><td style="color:#16a34a;font-weight:600">✓</td></tr>
+            <tr><td>15/04</td><td>Strada · MNP-2F88</td><td><div class="condutor-cell"><img class="condutor-foto" src="https://randomuser.me/api/portraits/men/74.jpg"><span>Márcio Oliveira</span></div></td><td>Gasolina</td><td>38L</td><td style="font-weight:700;color:#2D5A3D">R$ 266,00</td><td>Posto Shell Arte</td><td style="color:#16a34a;font-weight:600">✓</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== MANUTENÇÕES ======== -->
+  <div class="page" id="page-manutencoes">
+    <div class="kpi-grid-4">
+      <div class="kpi-card red"><div class="kpi-label">OS Abertas</div><div class="kpi-value">0</div><div class="kpi-sub">nenhuma pendente</div></div>
+      <div class="kpi-card green"><div class="kpi-label">OS Concluídas</div><div class="kpi-value">7</div><div class="kpi-sub">este mês</div></div>
+      <div class="kpi-card gold"><div class="kpi-label">Gasto Manutenção</div><div class="kpi-value">R$3.840</div><div class="kpi-sub">este mês</div></div>
+      <div class="kpi-card blue"><div class="kpi-label">Ticket Médio OS</div><div class="kpi-value">R$480</div><div class="kpi-sub">por ordem</div></div>
+    </div>
+    <div class="table-card">
+      <div class="table-header">
+        <h3>🔧 Ordens de Serviço</h3>
+        <div class="table-actions">
+          <select class="filter"><option>Todos os status</option><option>Aberta</option><option>Concluída</option></select>
+          <button class="btn btn-primary">+ Nova OS</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Status</th><th>Veículo</th><th>Tipo</th><th>Descrição</th><th>Prestador</th><th>Abertura</th><th>Valor</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge badge-concluida">Concluída</span></td><td>Saveiro Robust · HVS-3D71</td><td>Pneu</td><td>Troca dos 4 pneus — desgaste excessivo</td><td>Borracharia Central</td><td>15/04</td><td style="font-weight:700;color:#2D5A3D">R$ 1.200,00</td></tr>
+            <tr><td><span class="badge badge-concluida">Concluída</span></td><td>Strada · MNP-2F88</td><td>Elétrica</td><td>Falha no alternador — substituição</td><td>Elétrica do João</td><td>10/04</td><td style="font-weight:700;color:#2D5A3D">R$ 680,00</td></tr>
+            <tr><td><span class="badge badge-concluida">Concluída</span></td><td>Strada Working · BRT-5K12</td><td>Funilaria</td><td>Amassado lateral direita — reparo e pintura</td><td>Funilaria Master</td><td>05/04</td><td style="font-weight:700;color:#2D5A3D">R$ 950,00</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== POR UNIDADE ======== -->
+  <div class="page" id="page-por-unidade">
+    <div class="unidade-grid">
+      <div class="unidade-card">
+        <h4>🏨 Ibiúna</h4>
+        <div class="unidade-stat"><span class="unidade-stat-label">Veículos</span><span class="unidade-stat-val">2</span></div>
+        <div class="unidade-stat"><span class="unidade-stat-label">Retiradas (mês)</span><span class="unidade-stat-val">38</span></div>
+        <div class="unidade-stat"><span class="unidade-stat-label">KM percorrido</span><span class="unidade-stat-val">4.710 km</span></div>
+        <div class="unidade-stat"><span class="unidade-stat-label">Combustível</span><span class="unidade-stat-val">R$ 1.240,00</span></div>
+        <div class="unidade-stat"><span class="unidade-stat-label">Manutenção</span><span class="unidade-stat-val">R$ 1.880,00</span></div>
+        <div class="unidade-stat"><span class="unidade-stat-label">OS Abertas</span><span class="unidade-stat-val" style="color:#DC2626">1</span></div>
+      </div>
+      <div class="unidade-card">
+        <h4>🏨 Dourado</h4>
+        <div class="unidade-stat"><span class="unidade-stat-label">Veículos</span><span class="unidade-stat-val">2</span></div>
+        <div class="unidade-stat"><span class="unidade-stat-label">Retiradas (mês)</span><span class="unidade-stat-val">27</span></div>
+        <div class="unidade-stat"><span class="unidade-stat-label">KM percorrido</span><span class="unidade-stat-val">3.190 km</span></div>
+        <div class="unidade-stat"><span class="unidade-stat-label">Combustível</span><span class="unidade-stat-val">R$ 840,00</span></div>
+        <div class="unidade-stat"><span class="unidade-stat-label">Manutenção</span><span class="unidade-stat-val">R$ 1.130,00</span></div>
+        <div class="unidade-stat"><span class="unidade-stat-label">OS Abertas</span><span class="unidade-stat-val" style="color:#16a34a">0</span></div>
+      </div>
+      <div class="unidade-card">
+        <h4>🏨 Arte</h4>
+        <div class="unidade-stat"><span class="unidade-stat-label">Veículos</span><span class="unidade-stat-val">1</span></div>
+        <div class="unidade-stat"><span class="unidade-stat-label">Retiradas (mês)</span><span class="unidade-stat-val">17</span></div>
+        <div class="unidade-stat"><span class="unidade-stat-label">KM percorrido</span><span class="unidade-stat-val">2.040 km</span></div>
+        <div class="unidade-stat"><span class="unidade-stat-label">Combustível</span><span class="unidade-stat-val">R$ 260,00</span></div>
+        <div class="unidade-stat"><span class="unidade-stat-label">Manutenção</span><span class="unidade-stat-val">R$ 830,00</span></div>
+        <div class="unidade-stat"><span class="unidade-stat-label">OS Abertas</span><span class="unidade-stat-val" style="color:#16a34a">0</span></div>
+      </div>
+    </div>
+    <div class="charts-2b">
+      <div class="chart-card"><h3>📊 KM por Unidade — Mês</h3><canvas id="chartUnidadeKM" height="200"></canvas></div>
+      <div class="chart-card"><h3>💰 Gasto Total por Unidade</h3><canvas id="chartUnidadeGasto" height="200"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ======== POR VEÍCULO ======== -->
+  <div class="page" id="page-por-veiculo">
+    <div class="table-card">
+      <div class="table-header"><h3>🚙 Relatório por Veículo — Abril 2026</h3><div class="table-actions"><button class="btn btn-primary">⬇ Exportar</button></div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Veículo</th><th>Placa</th><th>Retiradas</th><th>KM Percorrido</th><th>Combustível</th><th>Manutenção</th><th>Custo Total</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Saveiro Robust</strong></td><td>HVS-3D71</td><td>22</td><td>2.840 km</td><td>R$ 420,00</td><td>R$ 1.200,00</td><td style="font-weight:800;color:#1E3A2B">R$ 1.620,00</td><td><span class="badge badge-em-uso">Em uso</span></td></tr>
+            <tr><td><strong>Strada Working</strong></td><td>BRT-5K12</td><td>18</td><td>2.190 km</td><td>R$ 280,00</td><td>R$ 950,00</td><td style="font-weight:800;color:#1E3A2B">R$ 1.230,00</td><td><span class="badge badge-disponivel">Disponível</span></td></tr>
+            <tr><td><strong>Strada</strong></td><td>MNP-2F88</td><td>12</td><td>1.540 km</td><td>R$ 266,00</td><td>R$ 680,00</td><td style="font-weight:800;color:#1E3A2B">R$ 946,00</td><td><span class="badge badge-disponivel">Disponível</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="chart-card"><h3>🚗 KM por Veículo — Mês Atual</h3><canvas id="chartVeiculoKM" height="120"></canvas></div>
+  </div>
+
+  <!-- ======== POR CONDUTOR ======== -->
+  <div class="page" id="page-por-condutor">
+    <div class="table-card">
+      <div class="table-header"><h3>👤 Relatório por Condutor — Abril 2026</h3><div class="table-actions"><button class="btn btn-primary">⬇ Exportar</button></div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Condutor</th><th>Retiradas</th><th>KM Total</th><th>Abastecimentos</th><th>Último Uso</th></tr></thead>
+          <tbody>
+            <tr><td><div class="condutor-cell"><img class="condutor-foto" src="https://randomuser.me/api/portraits/men/57.jpg"><span>Roberto Lima</span></div></td><td>22</td><td>2.840 km</td><td>R$ 420,00</td><td>Hoje 06:00 — Em uso</td></tr>
+            <tr><td><div class="condutor-cell"><img class="condutor-foto" src="https://randomuser.me/api/portraits/women/28.jpg"><span>Fernanda Ramos</span></div></td><td>18</td><td>2.190 km</td><td>R$ 280,00</td><td>Hoje 09:20</td></tr>
+            <tr><td><div class="condutor-cell"><img class="condutor-foto" src="https://randomuser.me/api/portraits/men/32.jpg"><span>Carlos Mendes</span></div></td><td>15</td><td>1.870 km</td><td>R$ 294,00</td><td>Hoje 09:05</td></tr>
+            <tr><td><div class="condutor-cell"><img class="condutor-foto" src="https://randomuser.me/api/portraits/men/74.jpg"><span>Márcio Oliveira</span></div></td><td>12</td><td>1.540 km</td><td>R$ 0</td><td>Hoje 08:50</td></tr>
+            <tr><td><div class="condutor-cell"><img class="condutor-foto" src="https://randomuser.me/api/portraits/women/44.jpg"><span>Ana Paula Souza</span></div></td><td>10</td><td>980 km</td><td>R$ 0</td><td>Hoje 08:15</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== COLABORADORES ======== -->
+  <div class="page" id="page-colaboradores">
+    <div class="colab-grid">
+      <div class="colab-card">
+        <img class="colab-avatar" src="https://randomuser.me/api/portraits/men/57.jpg">
+        <div class="colab-name">Roberto Lima</div>
+        <div class="colab-role">Motorista · CNH D</div>
+        <div class="colab-badge">Arte</div>
+      </div>
+      <div class="colab-card">
+        <img class="colab-avatar" src="https://randomuser.me/api/portraits/women/28.jpg">
+        <div class="colab-name">Fernanda Ramos</div>
+        <div class="colab-role">Recepcionista · CNH B</div>
+        <div class="colab-badge">Dourado</div>
+      </div>
+      <div class="colab-card">
+        <img class="colab-avatar" src="https://randomuser.me/api/portraits/men/32.jpg">
+        <div class="colab-name">Carlos Mendes</div>
+        <div class="colab-role">Motorista · CNH B</div>
+        <div class="colab-badge">Ibiúna</div>
+      </div>
+      <div class="colab-card">
+        <img class="colab-avatar" src="https://randomuser.me/api/portraits/men/74.jpg">
+        <div class="colab-name">Márcio Oliveira</div>
+        <div class="colab-role">Motorista · CNH D</div>
+        <div class="colab-badge">Arte</div>
+      </div>
+      <div class="colab-card">
+        <img class="colab-avatar" src="https://randomuser.me/api/portraits/women/44.jpg">
+        <div class="colab-name">Ana Paula Souza</div>
+        <div class="colab-role">Coordenadora · CNH B</div>
+        <div class="colab-badge">Dourado</div>
+      </div>
+      <div class="colab-card">
+        <img class="colab-avatar" src="https://randomuser.me/api/portraits/men/11.jpg">
+        <div class="colab-name">João Silva</div>
+        <div class="colab-role">Gestor de Frota · CNH B</div>
+        <div class="colab-badge">Ibiúna</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== CONFIGURAÇÕES ======== -->
+  <div class="page" id="page-configuracoes">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="config-section">
+        <h4>🔔 Notificações</h4>
+        <div class="config-row"><div><div class="config-label">Alerta de veículo em uso por mais de 4h</div><div class="config-sub">Notificar gestor quando veículo não retornar</div></div><div class="toggle"></div></div>
+        <div class="config-row"><div><div class="config-label">Alerta de KM para abastecimento</div><div class="config-sub">Notificar quando veículo atingir KM limite</div></div><div class="toggle"></div></div>
+        <div class="config-row"><div><div class="config-label">Resumo diário por e-mail</div><div class="config-sub">Receber relatório às 18h todo dia útil</div></div><div class="toggle off"></div></div>
+      </div>
+      <div class="config-section">
+        <h4>🚗 Veículos Cadastrados</h4>
+        <div class="config-row"><div><div class="config-label">Strada · MNP-2F88</div><div class="config-sub">Fiat · Branca · Ibiúna</div></div><span class="badge badge-disponivel">Ativo</span></div>
+        <div class="config-row"><div><div class="config-label">Strada Working · BRT-5K12</div><div class="config-sub">Fiat · Prata · Dourado</div></div><span class="badge badge-disponivel">Ativo</span></div>
+        <div class="config-row"><div><div class="config-label">Saveiro Robust · HVS-3D71</div><div class="config-sub">Volkswagen · Prata · Arte</div></div><span class="badge badge-disponivel">Ativo</span></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+const G='#1E3A2B',G2='#2D5A3D',G3='#4A8060',GO='#C9A84C',GL='#E8CC7A',AM='#D97706',BL='#2563EB',TE='#0891B2';
+let chartInstances = {};
+
+function goTo(page, title) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('topbar-title').textContent = title;
+  event.currentTarget.classList.add('active');
+  renderCharts(page);
+}
+
+function mkChart(id, cfg) {
+  if (chartInstances[id]) chartInstances[id].destroy();
+  chartInstances[id] = new Chart(document.getElementById(id), cfg);
+}
+
+function renderCharts(page) {
+  if (page === 'dashboard') {
+    mkChart('chartDia', { type:'bar', data:{ labels:['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'], datasets:[{label:'Retiradas',data:[4,5,3,6,3,1,0],backgroundColor:G2,borderRadius:5},{label:'Entregas',data:[3,4,3,5,3,1,0],backgroundColor:GO,borderRadius:5}]}, options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},scales:{y:{beginAtZero:true}},responsive:true}});
+    mkChart('chartUnidade',{type:'doughnut',data:{labels:['Ibiúna','Dourado','Arte'],datasets:[{data:[38,27,17],backgroundColor:[G,GO,G3],borderWidth:2}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},responsive:true}});
+    mkChart('chartComb',{type:'doughnut',data:{labels:['Gasolina','Etanol','Diesel'],datasets:[{data:[294,280,420],backgroundColor:[AM,G2,BL],borderWidth:2}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},responsive:true}});
+    mkChart('chartKM',{type:'bar',data:{labels:['Saveiro Robust','Strada Working','Strada'],datasets:[{label:'KM',data:[2840,2190,1540],backgroundColor:[G,G2,GO],borderRadius:5}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>v.toLocaleString('pt-BR')+'km'}}},responsive:true}});
+  }
+  if (page === 'por-unidade') {
+    mkChart('chartUnidadeKM',{type:'bar',data:{labels:['Ibiúna','Dourado','Arte'],datasets:[{label:'KM',data:[4710,3190,2040],backgroundColor:[G,GO,G3],borderRadius:8}]},options:{plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v+'km'}}},responsive:true}});
+    mkChart('chartUnidadeGasto',{type:'doughnut',data:{labels:['Ibiúna','Dourado','Arte'],datasets:[{data:[3120,1970,1090],backgroundColor:[G,GO,G3],borderWidth:2}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:12}}}},responsive:true}});
+  }
+  if (page === 'por-veiculo') {
+    mkChart('chartVeiculoKM',{type:'bar',data:{labels:['Saveiro Robust','Strada Working','Strada'],datasets:[{label:'KM rodado',data:[2840,2190,1540],backgroundColor:[G,G2,GO],borderRadius:5}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>v+'km'}}},responsive:true}});
+  }
+}
+
+// Init dashboard charts
+renderCharts('dashboard');
+</script>
+</body>
+</html>
